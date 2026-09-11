@@ -213,6 +213,20 @@ body.force-mobile .header-search{ margin:0; max-width:none; }
 .card h3{ font-size:15.5px; margin:0 0 8px; font-weight:600; }
 .card .tags{ display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
 .climax-tag{ position:absolute; right:14px; bottom:10px; color:var(--gold); font-size:11px; letter-spacing:.05em; font-family:'Fraunces',serif; font-weight:600; }
+
+/* Rows listing the stories a purchase unlocks, on anthology/product pages.
+   Styled as obvious clickable cards — a reviewer shouldn't have to guess that
+   these are both the included content and a link to read it. */
+.included-story{
+  display:flex; justify-content:space-between; align-items:center; gap:14px;
+  background:var(--surface); border:1px solid var(--seam); border-radius:var(--radius);
+  padding:13px 16px; margin-bottom:9px; cursor:pointer;
+  transition:border-color .15s, transform .15s;
+}
+.included-story:hover{ border-color:var(--gold); transform:translateY(-1px); }
+.included-story .title{ color:var(--ink); font-weight:600; font-size:14.5px; line-height:1.4; }
+.included-story .read-cue{ color:var(--gold); font-size:12.5px; margin-top:5px; }
+.included-story .climax-count{ color:var(--gold); font-size:12px; font-weight:600; white-space:nowrap; }
 .tag-chip{
   font-size:10.5px; padding:3px 9px; border-radius:20px; background:var(--raised); color:var(--ink-dim);
   border:1px solid var(--seam); transition:all .12s;
@@ -836,8 +850,9 @@ footer.site{ border-top:1px solid var(--seam); margin-top:60px; padding:30px 0; 
       <p style="color:var(--ink-dim);line-height:1.7;font-size:14.5px;" id="product-desc"></p>
       <div id="product-anthology-note" style="font-size:13px;color:var(--rose);margin-bottom:16px;"></div>
       <button class="btn solid" onclick="showToast('Wires up to CCBill/Segpay checkout once backend is built.')">Buy now</button>
-      <h3 style="margin-top:34px;font-size:15px;" id="product-chapters-heading">Stories in this collection</h3>
-      <div id="product-chapters" style="font-size:13.5px;color:var(--ink-dim);"></div>
+      <h3 style="margin-top:34px;font-size:15px;" id="product-chapters-heading">What you get with this purchase</h3>
+      <p id="product-chapters-note" style="font-size:13px;color:var(--ink-dim);margin:0 0 14px;line-height:1.6;"></p>
+      <div id="product-chapters"></div>
     </div>
   </div>
 </main>
@@ -2261,13 +2276,23 @@ function renderProduct(id){
       <div><div style="font-size:22px;color:var(--gold);" class="display">${climaxTotal}</div><div style="font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.05em;">Climax count</div></div>
       <div><div style="font-size:22px;" class="display">${anthStories.length}</div><div style="font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.05em;">Stories</div></div>`;
     document.getElementById('product-chapters-heading').style.display = '';
-    document.getElementById('product-chapters-heading').textContent = 'Stories in this collection';
+    document.getElementById('product-chapters-heading').textContent = 'What you get with this purchase';
+    document.getElementById('product-chapters-note').textContent = anthStories.length
+      ? `Buying this collection unlocks full access to ${anthStories.length === 1 ? 'this story' : `all ${anthStories.length} stories`} below. Click any title to open it.`
+      : '';
     document.getElementById('product-chapters').innerHTML = anthStories.map(st=>
-      `<div style="padding:8px 0;border-bottom:1px solid var(--seam);cursor:pointer;display:flex;justify-content:space-between;" onclick="go('read','${st.id}')"><span>${st.title} →</span><span style="color:var(--gold);white-space:nowrap;margin-left:12px;">${st.climax} climax</span></div>`
+      `<div class="included-story" onclick="go('read','${st.id}')">
+        <div>
+          <div class="title">${st.title}</div>
+          <div class="read-cue">Read this story →</div>
+        </div>
+        <span class="climax-count">${st.climax} climax</span>
+      </div>`
     ).join('') || '<p style="color:var(--ink-dim);">No stories tagged into this anthology yet.</p>';
   } else {
     document.getElementById('product-counts').innerHTML = '';
     document.getElementById('product-chapters-heading').style.display = 'none';
+    document.getElementById('product-chapters-note').textContent = '';
     document.getElementById('product-chapters').innerHTML = '';
   }
 }
