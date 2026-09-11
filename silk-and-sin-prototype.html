@@ -1267,7 +1267,7 @@ function updatePageMeta(page, param){
   document.getElementById('og-title-tag').setAttribute('content', title);
   document.getElementById('og-description-tag').setAttribute('content', desc);
 }
-function go(page, param){
+function go(page, param, fromHistory){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('mobile-menu').classList.remove('open');
@@ -1285,23 +1285,30 @@ function go(page, param){
   if(page==='tagcloud') renderTagCloud();
   if(page==='account'){ updateAccountAuthVisibility(); setAccountTab('billing', document.querySelector('[data-account-tab="billing"]')); }
   if(page==='posteditor') renderPostEditor(param);
-  updateUrlHash(page, param);
+  if(!fromHistory) pushUrlHash(page, param);
 }
-function updateUrlHash(page, param){
-  // Keeps the current page/story in the URL so a refresh lands back where you were, instead of
-  // always bouncing to the homepage. Uses replaceState (not a hash assignment) so the many
-  // internal go() calls that happen during normal use don't spam the browser's back button.
+function pushUrlHash(page, param){
+  // Keeps the current page/story in the URL so a refresh lands back where you were, and gives
+  // each navigation its own history entry so the browser back button walks back through the
+  // site instead of leaving it. Skipped when the hash is unchanged, so following a link to the
+  // page you're already on doesn't cost an extra press of back.
   const hash = param ? `#${page}/${encodeURIComponent(param)}` : `#${page}`;
-  if(location.hash !== hash) history.replaceState(null, '', hash);
+  if(location.hash !== hash) history.pushState(null, '', hash);
 }
-function restorePageFromUrl(){
+function restorePageFromUrl(fromHistory){
   const raw = location.hash.replace(/^#/, '');
   if(!raw) return;
   const [page, param] = raw.split('/');
   if(document.getElementById('page-'+page)){
-    go(page, param ? decodeURIComponent(param) : undefined);
+    go(page, param ? decodeURIComponent(param) : undefined, fromHistory);
   }
 }
+window.addEventListener('popstate', ()=>{
+  // Back/forward button. An empty hash means they've walked back to the entry they first
+  // landed on, which is the home page.
+  if(location.hash) restorePageFromUrl(true);
+  else go('home', undefined, true);
+});
 function toggleMobileMenu(){ document.getElementById('mobile-menu').classList.toggle('open'); }
 function headerSearch(){
   const q = document.getElementById('header-search-input').value;
