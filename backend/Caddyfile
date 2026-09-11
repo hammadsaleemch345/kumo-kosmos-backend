@@ -1,0 +1,10 @@
+api.kumokosmos.com {
+    reverse_proxy app:8080
+}
+
+kumokosmos.com, www.kumokosmos.com {
+    reverse_proxy frontend:80
+}
+
+# Caddy automatically provisions and renews Let's Encrypt certificates for the domains above,
+# and redirects plain HTTP to HTTPS by default — no certbot, no manual renewal cron job.

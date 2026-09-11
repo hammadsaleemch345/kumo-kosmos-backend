@@ -1,0 +1,19 @@
+.env
+backend/.env
+backend/.venv
+**/__pycache__/
+*.pyc
+backend/.pytest_cache/
+backend/dev.db
+backend/uploads/
+infra/.terraform/
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+
+# Raw Substack export: real subscriber emails (~2785) and the client's paid content.
+# Never commit this, repo is public. The code that processes these files stays in git,
+# the actual client/subscriber data does not.
+posts.csv
+email_list.kumokosmos.csv
+posts/
+.DS_Store

@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Not published to the host/public internet on purpose — only the app container can reach it,
+    # over the compose network. Nothing else on the droplet needs direct DB access.
+
+  app:
+    image: ${APP_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://app:${POSTGRES_PASSWORD}@postgres:5432/app
+      SECRET_KEY: ${SECRET_KEY}
+    # No "ports:" here on purpose — not reachable directly from outside anymore, only
+    # through the proxy below, over the internal compose network as plain "app:8080".
+    volumes:
+      - uploads_data:/app/uploads
+
+  frontend:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - /opt/app/silk-and-sin-prototype.html:/usr/share/nginx/html/index.html:ro
+    # Also not published directly — only reachable through the proxy, as "frontend:80".
+
+  proxy:
+    image: caddy:alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/app/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  uploads_data:
+  caddy_data:
+  caddy_config:
